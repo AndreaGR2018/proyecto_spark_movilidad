@@ -1,0 +1,90 @@
+Proyecto de Análisis de Movilidad con Spark y Kafka
+
+Introducción
+Este proyecto analiza datos de movilidad en Bogotá utilizando **Apache Spark** y **Apache Kafka** para el procesamiento en tiempo real.  
+El conjunto de datos contiene información sobre los medios de transporte utilizados por los ciudadanos en sus viajes diarios.
+
+---
+
+Arquitectura de la Solución
+
+La arquitectura incluye los siguientes componentes:
+
+- **Kafka** 📨: para la transmisión de mensajes en tiempo real.  
+- **Spark Structured Streaming** ⚙️: para el procesamiento continuo de los datos recibidos desde Kafka.  
+- **Docker Compose** 🐳: para levantar los servicios de Kafka y Zookeeper fácilmente.  
+- **Python** 🐍: para generar los mensajes (productor) y procesarlos (consumidor).
+
+---
+
+Archivos Principales
+
+| Archivo | Descripción |
+|----------|-------------|
+| `producer_generator.py` | Envía los registros del dataset al tópico de Kafka (`movilidad_bogota`). |
+| `streaming_kafka.py` | Consume los mensajes desde Kafka y los procesa en tiempo real con Spark. |
+| `docker-compose.yml` | Define los contenedores de **Kafka** y **Zookeeper**. |
+| `Encuesta_movilidad.csv` | Dataset base con la información de los registros. |
+
+---
+
+Flujo del Sistema
+
+1. **Kafka** recibe los mensajes generados por el productor (`producer_generator.py`).  
+2. **Spark Streaming** (en `streaming_kafka.py`) consume esos mensajes desde el tópico.  
+3. Los datos se agrupan por tipo de medio de transporte (`MEDIO_PRE`) y se muestran los resultados en tiempo real.  
+
+---
+
+Resultados Esperados
+
+El sistema muestra en tiempo real la cantidad de viajes por tipo de medio de transporte (`MEDIO_PRE`) en batches de procesamiento continuo, por ejemplo:
+
++------------+-----+
+| MEDIO_PRE |count|
++------------+-----+
+| transmilenio |235 |
+| bus |204 |
+| bicicleta |128 |
+| peaton |226 |
+| carro |142 |
+| taxi |80 |
+| moto |135 |
++------------+-----+
+
+---
+
+Ejecución del Proyecto
+
+1. Levantar los contenedores de Kafka y Zookeeper
+Desde el directorio del proyecto:
+```bash
+sudo docker-compose up -d
+
+2. Ejecutar el Productor (envía datos a Kafka)
+python3 producer_generator.py
+
+3. Ejecutar el Consumidor (procesa los datos en Spark)
+
+En otra terminal:
+
+spark-submit streaming_kafka.py
+
+Requisitos Previos
+
+Docker y Docker Compose instalados
+
+Apache Spark configurado
+
+Python 3.8 o superior
+
+Librerías:
+
+pip install kafka-python pyspark
+
+Autores
+
+Proyecto desarrollado por Andrea Gordillo Rojas
+Universidad Nacional Abierta y a Distancia
+Curso: Big Data
+2025
