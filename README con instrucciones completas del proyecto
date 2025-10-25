@@ -40,24 +40,64 @@ producer_generator.py	Envía los registros del dataset al tópico de Kafka (movi
 streaming_kafka.py	Consume los mensajes desde Kafka y los procesa en tiempo real con Spark.
 docker-compose.yml	Define los contenedores de Kafka y Zookeeper.
 Encuesta_movilidad.csv	Dataset base con la información de los registros.
-🧮 Procesamiento Batch
+🚀 Ejecución del procesamiento batch (Apache Spark)
+📌 Descripción
 
-El script batch_process.py realiza el análisis inicial del dataset de movilidad en formato batch.
-Incluye tareas de limpieza, transformación y cálculo de promedios por medio de transporte.
+El procesamiento batch se encarga de analizar los datos históricos de movilidad ciudadana en Bogotá, obtenidos de la encuesta de movilidad.
+Este proceso permite identificar patrones de uso de transporte, horarios de mayor flujo y tiempos promedio de desplazamiento.
 
-Ejecución
+El script principal es:
+
+batch_process.py
+
+⚙️ Ejecución del script
+
+Para ejecutar el procesamiento batch desde el entorno Hadoop/Spark (en la máquina virtual Ubuntu Server), se usa el siguiente comando:
+
+cd ~/datasets/encuesta_movilidad
 spark-submit batch_process.py
 
 
-Los resultados procesados se guardan automáticamente en la carpeta resultados/ en formato CSV.
+💡 Asegúrate de haber iniciado los servicios de Hadoop y configurado correctamente las variables de entorno de Spark antes de ejecutar el comando.
 
-📸 Ejemplo de salida del procesamiento batch:
+🧮 Proceso realizado
 
-MEDIO_PRE     Promedio_Tiempo
-bus           36.2
-carro         29.4
-bicicleta     18.7
-peaton        24.9
+El script realiza las siguientes operaciones:
+
+Carga del dataset desde un archivo CSV (encuesta de movilidad).
+
+Limpieza y transformación de datos, eliminando valores nulos y columnas innecesarias.
+
+Agrupación y análisis de los viajes por medio de transporte, hora y duración promedio.
+
+Generación de resultados en consola o archivos CSV, listos para visualización y análisis posterior.
+
+📸 Ejemplo de salida
+
+Evidencia de la ejecución del procesamiento batch en la consola de Spark:
+
++------------------+-------------+-------------------+
+|medio_transporte  |cantidad_viajes|tiempo_promedio_min|
++------------------+-------------+-------------------+
+|Transmilenio      |  14532      |       43.2        |
+|Bus Urbano        |   9560      |       39.7        |
+|Automóvil Particular |  7843     |       35.4        |
+|Bicicleta         |   3241      |       27.1        |
++------------------+-------------+-------------------+
+
+📁 Resultados
+
+Los resultados generados se almacenan en la carpeta local:
+
+~/datasets/encuesta_movilidad/output_batch/
+
+
+Cada archivo contiene los datos procesados por Spark listos para análisis o visualización.
+
+🧠 Conclusiones
+
+El procesamiento batch permitió obtener una visión general de los patrones de movilidad, destacando los medios de transporte con mayor uso y los tiempos promedio de desplazamiento.
+Estos resultados sirven como base para comparar con el análisis en tiempo real (streaming) mediante Apache Kafka y Spark Streaming.
 
 🔁 Procesamiento en Tiempo Real (Streaming)
 
