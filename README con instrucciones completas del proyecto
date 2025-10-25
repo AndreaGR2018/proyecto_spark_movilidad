@@ -1,90 +1,118 @@
-Proyecto de Análisis de Movilidad con Spark y Kafka
+🚦 Proyecto Spark Movilidad
 
-Introducción
-Este proyecto analiza datos de movilidad en Bogotá utilizando **Apache Spark** y **Apache Kafka** para el procesamiento en tiempo real.  
-El conjunto de datos contiene información sobre los medios de transporte utilizados por los ciudadanos en sus viajes diarios.
+Análisis de movilidad en Bogotá con Apache Spark y Kafka
 
----
+🧩 Introducción
 
-Arquitectura de la Solución
+Este proyecto analiza datos de movilidad en Bogotá utilizando Apache Spark y Apache Kafka para el procesamiento tanto batch como en tiempo real.
+El conjunto de datos contiene información sobre los medios de transporte utilizados por los ciudadanos en sus viajes diarios, permitiendo identificar patrones de desplazamiento y comportamientos de movilidad urbana.
 
-La arquitectura incluye los siguientes componentes:
+🗺️ Definición del problema y conjunto de datos
 
-- **Kafka** 📨: para la transmisión de mensajes en tiempo real.  
-- **Spark Structured Streaming** ⚙️: para el procesamiento continuo de los datos recibidos desde Kafka.  
-- **Docker Compose** 🐳: para levantar los servicios de Kafka y Zookeeper fácilmente.  
-- **Python** 🐍: para generar los mensajes (productor) y procesarlos (consumidor).
+El propósito de este proyecto es analizar los patrones de movilidad de los ciudadanos de Bogotá a partir de datos de encuestas sobre viajes, con el fin de identificar:
 
----
+Los medios de transporte más utilizados.
 
-Archivos Principales
+Los horarios de mayor flujo de viajes.
 
-| Archivo | Descripción |
-|----------|-------------|
-| `producer_generator.py` | Envía los registros del dataset al tópico de Kafka (`movilidad_bogota`). |
-| `streaming_kafka.py` | Consume los mensajes desde Kafka y los procesa en tiempo real con Spark. |
-| `docker-compose.yml` | Define los contenedores de **Kafka** y **Zookeeper**. |
-| `Encuesta_movilidad.csv` | Dataset base con la información de los registros. |
+Los tiempos promedio de desplazamiento según el medio de transporte.
 
----
+El conjunto de datos utilizado proviene de la Encuesta de Movilidad de Bogotá (Encuesta_movilidad.csv), disponible públicamente en fuentes abiertas como Kaggle y el portal de datos abiertos de Colombia.
+Este dataset contiene información de viajes con campos como:
+ID_ENCUESTA, NUMERO_PERSONA, MOTIVOVIAJE, MUNICIPIO_DESTINO, HORA_INICIO, HORA_FIN, TIEMPO_CAMINO y MEDIO_PRE.
 
-Flujo del Sistema
+⚙️ Arquitectura de la Solución
 
-1. **Kafka** recibe los mensajes generados por el productor (`producer_generator.py`).  
-2. **Spark Streaming** (en `streaming_kafka.py`) consume esos mensajes desde el tópico.  
-3. Los datos se agrupan por tipo de medio de transporte (`MEDIO_PRE`) y se muestran los resultados en tiempo real.  
+La arquitectura incluye los siguientes componentes principales:
 
----
+Kafka 📨: para la transmisión de mensajes en tiempo real.
 
-Resultados Esperados
+Spark Structured Streaming ⚙️: para el procesamiento continuo de los datos recibidos desde Kafka.
 
-El sistema muestra en tiempo real la cantidad de viajes por tipo de medio de transporte (`MEDIO_PRE`) en batches de procesamiento continuo, por ejemplo:
+Docker Compose 🐳: para levantar los servicios de Kafka y Zookeeper fácilmente.
 
-+------------+-----+
-| MEDIO_PRE |count|
-+------------+-----+
-| transmilenio |235 |
-| bus |204 |
-| bicicleta |128 |
-| peaton |226 |
-| carro |142 |
-| taxi |80 |
-| moto |135 |
-+------------+-----+
+Python 🐍: para generar los mensajes (productor) y procesarlos (consumidor).
 
----
+📁 Archivos Principales
+Archivo	Descripción
+batch_process.py	Realiza el análisis inicial del dataset en modo batch (limpieza, transformación y cálculo de promedios).
+producer_generator.py	Envía los registros del dataset al tópico de Kafka (movilidad_bogota).
+streaming_kafka.py	Consume los mensajes desde Kafka y los procesa en tiempo real con Spark.
+docker-compose.yml	Define los contenedores de Kafka y Zookeeper.
+Encuesta_movilidad.csv	Dataset base con la información de los registros.
+🧮 Procesamiento Batch
 
-Ejecución del Proyecto
+El script batch_process.py realiza el análisis inicial del dataset de movilidad en formato batch.
+Incluye tareas de limpieza, transformación y cálculo de promedios por medio de transporte.
 
-1. Levantar los contenedores de Kafka y Zookeeper
+Ejecución
+spark-submit batch_process.py
+
+
+Los resultados procesados se guardan automáticamente en la carpeta resultados/ en formato CSV.
+
+📸 Ejemplo de salida del procesamiento batch:
+
+MEDIO_PRE     Promedio_Tiempo
+bus           36.2
+carro         29.4
+bicicleta     18.7
+peaton        24.9
+
+🔁 Procesamiento en Tiempo Real (Streaming)
+
+El procesamiento en tiempo real se realiza con Kafka + Spark Streaming:
+
+1️⃣ Kafka recibe los mensajes generados por el productor (producer_generator.py).
+2️⃣ Spark Streaming (en streaming_kafka.py) consume esos mensajes desde el tópico.
+3️⃣ Los datos se agrupan por tipo de medio de transporte (MEDIO_PRE) y se muestran los resultados en tiempo real.
+
+▶️ Ejecución del Proyecto
+1️⃣ Levantar los contenedores de Kafka y Zookeeper
+
 Desde el directorio del proyecto:
-```bash
+
 sudo docker-compose up -d
 
-2. Ejecutar el Productor (envía datos a Kafka)
+2️⃣ Ejecutar el Productor (envía datos a Kafka)
 python3 producer_generator.py
 
-3. Ejecutar el Consumidor (procesa los datos en Spark)
+3️⃣ Ejecutar el Consumidor (procesa los datos en Spark)
 
 En otra terminal:
 
 spark-submit streaming_kafka.py
 
-Requisitos Previos
+📊 Visualización de Resultados
 
-Docker y Docker Compose instalados
+El sistema imprime en consola los resultados en tiempo real, mostrando el conteo de viajes por tipo de medio de transporte.
 
-Apache Spark configurado
+📸 Ejemplo de salida del streaming:
 
-Python 3.8 o superior
++-------------+-----+
+| MEDIO_PRE   |count|
++-------------+-----+
+| transmilenio| 235 |
+| bus         | 204 |
+| bicicleta   | 128 |
+| peaton      | 226 |
+| carro       | 142 |
+| taxi        | 80  |
+| moto        | 135 |
++-------------+-----+
 
-Librerías:
 
-pip install kafka-python pyspark
+Además, el procesamiento batch genera archivos CSV con resultados agregados en la carpeta resultados/.
 
-Autores
+🔗 Enlaces
 
-Proyecto desarrollado por Andrea Gordillo Rojas
-Universidad Nacional Abierta y a Distancia
-Curso: Big Data
-2025
+📂 Repositorio del proyecto: GitHub - Proyecto Spark Movilidad
+
+🎥 Video explicativo: (pendiente de grabar)
+
+🧑‍💻 Autores
+
+Proyecto desarrollado por:
+Andrea Gordillo Rojas
+Universidad Nacional Abierta y a Distancia (UNAD)
+Curso: Big Data – 2025
