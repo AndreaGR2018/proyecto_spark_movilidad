@@ -123,6 +123,12 @@ En otra terminal:
 
 spark-submit streaming_kafka.py
 
+Revisar resultados en consola.
+
+Detener servicios de Docker:
+
+sudo docker-compose down
+
 📊 Visualización de Resultados
 
 El sistema imprime en consola los resultados en tiempo real, mostrando el conteo de viajes por tipo de medio de transporte.
@@ -188,7 +194,9 @@ Estructura final del repositorio con el código fuente, scripts y documentación
 
 📂 Repositorio del proyecto: GitHub - Proyecto Spark Movilidad
 
-🎥 Video explicativo: (pendiente de grabar)
+🎥 Video explicativo: [Enlace pendiente]
+
+📑 Presentación del proyecto: [Enlace pendiente]
 
 🧑‍💻 Autores
 
