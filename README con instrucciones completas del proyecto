@@ -143,6 +143,46 @@ El sistema imprime en consola los resultados en tiempo real, mostrando el conteo
 
 
 Además, el procesamiento batch genera archivos CSV con resultados agregados en la carpeta resultados/.
+---
+
+## 📸 Evidencias del Proyecto
+
+A continuación, se presentan las principales evidencias del funcionamiento del proyecto, desde el procesamiento batch hasta el flujo de datos en tiempo real con Kafka y Spark Streaming.
+
+### 🧾 1. Procesamiento Batch
+Ejecución del script `batch_process.py` para procesar el conjunto de datos y generar los resultados agregados.
+  
+![Procesamiento Batch](evidencias/01_datos_batch_process.png)
+
+---
+
+### 📊 2. Resultados del Procesamiento Batch
+Visualización del archivo generado con los conteos por tipo de medio de transporte.
+
+![Resultados CSV](evidencias/02_resultados_batch_csv.png)
+
+---
+
+### 🚀 3. Productor Kafka Enviando Datos
+Simulación del flujo de datos en tiempo real desde el productor hacia el tópico de Kafka.
+
+![Productor Kafka](evidencias/03_kafka_productor.png)
+
+---
+
+### ⚙️ 4. Spark Streaming en Ejecución
+Ejecución del proceso `streaming_kafka.py` mostrando los resultados del análisis en tiempo real.
+
+![Spark Streaming](evidencias/04_spark_streaming.png)
+
+---
+
+### 💻 5. Repositorio en GitHub
+Estructura final del repositorio con el código fuente, scripts y documentación del proyecto.
+
+![Repositorio GitHub](evidencias/05_github_repo.png)
+
+---
 
 🔗 Enlaces
 
