@@ -58,9 +58,9 @@ El procesamiento batch se encarga de analizar los datos históricos de movilidad
 Permite identificar los medios de transporte más utilizados y los tiempos promedio de desplazamiento.
 
 ### ⚙️ Ejecución del script
-```bash
 cd ~/datasets/encuesta_movilidad
 spark-submit batch_process.py
+
 💡 Asegúrate de haber iniciado los servicios de Hadoop y configurado correctamente las variables de entorno de Spark antes de ejecutar el comando.
 
 🧮 Proceso realizado
@@ -74,10 +74,8 @@ Generación de resultados en consola y en archivos CSV.
 
 📁 Resultados
 Los resultados se almacenan en:
-
-bash
-Copiar código
 ~/datasets/encuesta_movilidad/resultados/
+
 🔁 Procesamiento en Tiempo Real (Streaming)
 El procesamiento en tiempo real se realiza con Kafka + Spark Streaming, simulando la llegada de datos dinámicos.
 
@@ -86,33 +84,24 @@ Kafka Producer: (kafka_producer.py) envía los registros del dataset al tópico 
 Spark Streaming Consumer: (spark_streaming_consumer.py) recibe los datos, calcula promedios y totales por tipo de transporte, y muestra resultados en consola.
 
 ▶️ Ejecución del proyecto
-1️⃣ Iniciar Zookeeper y Kafka:
 
-bash
-Copiar código
+1️⃣ Iniciar Zookeeper y Kafka:
 $KAFKA_HOME/bin/zookeeper-server-start.sh -daemon $KAFKA_HOME/config/zookeeper.properties
 $KAFKA_HOME/bin/kafka-server-start.sh -daemon $KAFKA_HOME/config/server.properties
+
 2️⃣ Ejecutar el productor:
-
-bash
-Copiar código
 python3 kafka_producer.py
+
 3️⃣ Ejecutar el consumidor (Spark Streaming):
-
-bash
-Copiar código
 spark-submit spark_streaming_consumer.py
+
 4️⃣ Detener los procesos:
-
 Ctrl + C para detener el producer y consumer.
-
 Cerrar Zookeeper y Kafka si es necesario.
 
 📊 Visualización de resultados
 Ejemplo de salida en tiempo real (Spark Streaming):
 
-diff
-Copiar código
 +-------------+-----------------+----------------+
 | MEDIO_PRE   | PROMEDIO_TIEMPO | TOTAL_VIAJES  |
 +-------------+-----------------+----------------+
@@ -123,19 +112,26 @@ Copiar código
 | Automóvil   | 35.4            | 142            |
 +-------------+-----------------+----------------+
 📸 Evidencias del Proyecto
-🧾 1. Procesamiento Batch
-
-
-📊 2. Resultados del Procesamiento Batch
-
-
-🚀 3. Productor Kafka Enviando Datos
-
-
-⚙️ 4. Spark Streaming en Ejecución
-
-
-💻 5. Repositorio GitHub
+### 🧾 1. Procesamiento Batch 
+Ejecución del script batch_process.py para procesar el conjunto de datos y generar los resultados agregados. 
+![Procesamiento Batch](evidencias/01_datos_batch_process.png) 
+--- 
+### 📊 2. Resultados del Procesamiento Batch 
+Visualización del archivo generado con los conteos por tipo de medio de transporte. 
+![Resultados CSV](evidencias/02_resultados_batch_csv.png) 
+--- 
+### 🚀 3. Productor Kafka 
+Enviando Datos Simulación del flujo de datos en tiempo real desde el productor hacia el tópico de Kafka. 
+![Productor Kafka](evidencias/03_kafka_productor.png) 
+--- 
+### ⚙️ 4. Spark Streaming en Ejecución 
+Ejecución del proceso spark_streaming_consumer.py mostrando los resultados del análisis en tiempo real. 
+![Spark Streaming](evidencias/04_spark_streaming.png) 
+--- 
+### 💻 5. Repositorio en GitHub 
+Estructura final del repositorio con el código fuente, scripts y documentación del proyecto. 
+![Repositorio GitHub](evidencias/05_github_repo.png) 
+---
 
 
 🧠 Conclusiones
