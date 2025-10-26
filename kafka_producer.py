@@ -4,10 +4,10 @@ import time
 from kafka import KafkaProducer
 from datetime import datetime
 
-# Cargar datos desde el CSV original
+# Cargar datos desde el CSV local
 df = pd.read_csv("/home/vboxuser/datasets/Encuesta_movilidad.csv")
 
-# Crear productor Kafka
+# Crear el productor Kafka
 producer = KafkaProducer(
     bootstrap_servers=['localhost:9092'],
     value_serializer=lambda x: json.dumps(x).encode('utf-8')
@@ -15,8 +15,8 @@ producer = KafkaProducer(
 
 print("📤 Iniciando envío de datos al topic 'movilidad'...\n")
 
-# Enviar cada fila del DataFrame como un mensaje JSON
-for _, row in df.iterrows():
+# Enviar cada fila del DataFrame como mensaje JSON
+for i, row in df.iterrows():
     try:
         data = {
             "ID_ENCUESTA": int(row["ID_ENCUESTA"]),
@@ -29,13 +29,16 @@ for _, row in df.iterrows():
             "HORA_INICIO": str(row["HORA_INICIO"]),
             "HORA_FIN": str(row["HORA_FIN"]),
             "MEDIO_PREDOMINANTE": str(row.get("MEDIO_PREDOMINANTE", "Desconocido")),
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         }
 
         producer.send('movilidad', value=data)
-        print(f"Enviado correctamente: {data}")
-        time.sleep(0.5)  # Pausa para simular flujo en tiempo real
+        print(f"✅ Enviado ({i+1}/{len(df)}): {data}")
+        time.sleep(0.5)  # Simula flujo en tiempo real
     except Exception as e:
-        print(f"⚠️ Error enviando fila: {e}")
+        print(f"⚠️ Error en la fila {i}: {e}")
 
-print("\n✅ Envío de datos completado.")
+# Finalizar el envío
+producer.flush()
+producer.close()
+print("\n✅ Envío de datos completado correctamente.")
