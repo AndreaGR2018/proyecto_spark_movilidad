@@ -111,26 +111,41 @@ Ejemplo de salida en tiempo real (Spark Streaming):
 | Peatón      | 25.3            | 226            |
 | Automóvil   | 35.4            | 142            |
 +-------------+-----------------+----------------+
+
 📸 Evidencias del Proyecto
 ### 🧾 1. Procesamiento Batch 
-Ejecución del script batch_process.py para procesar el conjunto de datos y generar los resultados agregados. 
+Ejecución del script batch_process.py para procesar el conjunto de datos y generar los resultados agregados.
+
 ![Procesamiento Batch](evidencias/01_datos_batch_process.png) 
+
 --- 
+
 ### 📊 2. Resultados del Procesamiento Batch 
 Visualización del archivo generado con los conteos por tipo de medio de transporte. 
+
 ![Resultados CSV](evidencias/02_resultados_batch_csv.png) 
+
 --- 
+
 ### 🚀 3. Productor Kafka 
 Enviando Datos Simulación del flujo de datos en tiempo real desde el productor hacia el tópico de Kafka. 
+
 ![Productor Kafka](evidencias/03_kafka_productor.png) 
+
 --- 
+
 ### ⚙️ 4. Spark Streaming en Ejecución 
 Ejecución del proceso spark_streaming_consumer.py mostrando los resultados del análisis en tiempo real. 
+
 ![Spark Streaming](evidencias/04_spark_streaming.png) 
+
 --- 
+
 ### 💻 5. Repositorio en GitHub 
 Estructura final del repositorio con el código fuente, scripts y documentación del proyecto. 
+
 ![Repositorio GitHub](evidencias/05_github_repo.png) 
+
 ---
 
 
