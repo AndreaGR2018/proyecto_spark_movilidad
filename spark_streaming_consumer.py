@@ -10,7 +10,7 @@ spark = SparkSession.builder \
 
 spark.sparkContext.setLogLevel("WARN")
 
-# Esquema de los datos JSON (debe coincidir con el formato del producer)
+# Esquema de los datos JSON (coincide con el producer)
 schema = StructType([
     StructField("ID_ENCUESTA", IntegerType()),
     StructField("NUMERO_PERSONA", IntegerType()),
@@ -34,13 +34,13 @@ df = spark \
     .option("startingOffsets", "latest") \
     .load()
 
-# Extraer y parsear los datos JSON desde el campo "value"
+# Extraer y parsear los datos JSON
 parsed_df = df.select(from_json(col("value").cast("string"), schema).alias("data")).select("data.*")
 
 # Reemplazar valores nulos
 parsed_df = parsed_df.na.fill({"TIEMPO_CAMINO": 0.0, "MEDIO_PREDOMINANTE": "Desconocido"})
 
-# Cálculo de estadísticas por ventana de tiempo (1 minuto)
+# Cálculo de estadísticas por ventana de 1 minuto
 stats = parsed_df \
     .groupBy(
         window(col("timestamp"), "1 minute"),
@@ -54,7 +54,7 @@ stats = parsed_df \
     .withColumn("FIN_VENTANA", date_format(col("window.end"), "HH:mm:ss")) \
     .select("INICIO_VENTANA", "FIN_VENTANA", "MEDIO_PREDOMINANTE", "PROMEDIO_TIEMPO", "TOTAL_VIAJES")
 
-# Mostrar los resultados en consola
+# Mostrar resultados en consola (Complete mode OK)
 console_query = stats \
     .writeStream \
     .outputMode("complete") \
@@ -62,14 +62,14 @@ console_query = stats \
     .option("truncate", "false") \
     .start()
 
-# Guardar los resultados como archivos CSV en HDFS o en tu sistema local
+# Guardar resultados en CSV (Append mode)
 file_query = stats \
     .writeStream \
-    .outputMode("complete") \
+    .outputMode("append") \
     .format("csv") \
     .option("path", "file:///home/vboxuser/spark_output/movilidad") \
     .option("checkpointLocation", "file:///home/vboxuser/spark_output/checkpoints") \
     .start()
 
-# Esperar la terminación del streaming
+# Esperar a que termine el streaming
 spark.streams.awaitAnyTermination()
