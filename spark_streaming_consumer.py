@@ -1,47 +1,52 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col, window, from_unixtime
-from pyspark.sql.types import StructType, StructField, IntegerType, FloatType, TimestampType
-import logging
+from pyspark.sql.functions import from_json, col, window
+from pyspark.sql.types import StructType, StructField, IntegerType, StringType, FloatType, TimestampType
 
-# Reducir los mensajes de log
+# Crear sesión Spark
 spark = SparkSession.builder \
-    .appName("KafkaSparkStreaming") \
+    .appName("KafkaSparkStreaming_Movilidad") \
     .getOrCreate()
 spark.sparkContext.setLogLevel("WARN")
 
-# Definir el esquema de los datos
+# Esquema del JSON que llega desde el producer
 schema = StructType([
-    StructField("sensor_id", IntegerType()),
-    StructField("temperature", FloatType()),
-    StructField("humidity", FloatType()),
-    StructField("timestamp", IntegerType())
+    StructField("ID_ENCUESTA", IntegerType()),
+    StructField("NUMERO_PERSONA", IntegerType()),
+    StructField("NUMERO_VIAJE", IntegerType()),
+    StructField("MOTIVOVIAJE", StringType()),
+    StructField("MUNICIPIO_DESTINO", StringType()),
+    StructField("DEPARTAMENTO_DESTINO", StringType()),
+    StructField("TIEMPO_CAMINO", FloatType()),
+    StructField("HORA_INICIO", StringType()),
+    StructField("HORA_FIN", StringType()),
+    StructField("MEDIO_PRE", StringType()),
+    StructField("timestamp", TimestampType())
 ])
 
-# Leer datos en streaming desde Kafka
+# Leer datos del topic 'movilidad'
 df = spark \
     .readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", "localhost:9092") \
-    .option("subscribe", "sensor_data") \
+    .option("subscribe", "movilidad") \
+    .option("startingOffsets", "latest") \
     .load()
 
-# Parsear el JSON
+# Parsear los JSON
 parsed_df = df.select(from_json(col("value").cast("string"), schema).alias("data")).select("data.*")
 
-# Convertir el timestamp Unix a tipo Timestamp
-parsed_df = parsed_df.withColumn("timestamp", from_unixtime(col("timestamp")).cast(TimestampType()))
+# Ejemplo de análisis: tiempo promedio por medio de transporte cada minuto
+stats = parsed_df \
+    .groupBy(window(col("timestamp"), "1 minute"), "MEDIO_PRE") \
+    .agg({"TIEMPO_CAMINO": "avg"}) \
+    .withColumnRenamed("avg(TIEMPO_CAMINO)", "PROMEDIO_TIEMPO")
 
-# Calcular promedios por minuto y sensor
-windowed_stats = parsed_df \
-    .groupBy(window(col("timestamp"), "1 minute"), "sensor_id") \
-    .agg({"temperature": "avg", "humidity": "avg"}) \
-    .orderBy("window")
-
-# Mostrar resultados en la consola
-query = windowed_stats \
+# Mostrar resultados en consola
+query = stats \
     .writeStream \
     .outputMode("complete") \
     .format("console") \
+    .option("truncate", "false") \
     .start()
 
 query.awaitTermination()
