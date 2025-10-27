@@ -1,18 +1,18 @@
 🚦 Proyecto de Análisis de Movilidad con Spark y Kafka
-
+-
 Autora: Andrea Gordillo Rojas
 Universidad: UNAD – Universidad Nacional Abierta y a Distancia
 Asignatura: Big Data y Analítica Avanzada
 Entorno de ejecución: Ubuntu (VM en VirtualBox con Apache Spark, Kafka, Python y Zookeeper instalados)
 
 🧩 1. Definición del problema y conjunto de datos
-
+-
 El proyecto tiene como propósito analizar la movilidad urbana en Bogotá, utilizando la Encuesta de Movilidad 2019, con el fin de identificar patrones de viaje, medios de transporte predominantes y tiempos promedio de desplazamiento.
 
 Se emplean herramientas del ecosistema Big Data —Apache Spark y Apache Kafka— para realizar un procesamiento batch y un procesamiento en tiempo real (streaming), demostrando cómo ambos enfoques se complementan en un escenario analítico completo.
 
 🧾 Conjunto de datos
-
+-
 Nombre: Movilidad de Bogotá – Caracterización de Viajes
 
 Archivo: Encuesta_movilidad.csv
@@ -28,7 +28,7 @@ Ubicación en la VM:
 /home/vboxuser/datasets/Encuesta_movilidad.csv
 
 🗂 2. Estructura de carpetas del proyecto
-
+-
 La organización del proyecto dentro de la VM es la siguiente:
 
 /home/vboxuser/
@@ -57,7 +57,7 @@ spark_streaming_consumer.py: Procesa los datos en tiempo real con Spark Streamin
 resultados/: Contiene los CSV generados por el análisis batch.
 
 ⚙️ 3. Procesamiento Batch (Spark)
-
+-
 Script: datasets/batch_process.py
 
 Este script realiza el análisis y transformación inicial del dataset de movilidad:
@@ -90,9 +90,9 @@ cd /home/vboxuser/datasets
 python3 batch_process.py
 
 Ejemplo de salida:
--------------------------------------------
-Batch: 5
--------------------------------------------
+------------------------------------
+|Batch: 5                          |
+------------------------------------
 +------------------+-------------+
 |MEDIO_PREDOMINANTE|PROMEDIO_TIEMPO|
 +------------------+-------------+
@@ -104,8 +104,9 @@ Batch: 5
 Streaming (salida en tiempo real):
 
 🔄 4. Procesamiento en Tiempo Real (Streaming + Kafka)
+-
 ⚙️ Kafka Producer
-
+-
 Script: /home/vboxuser/kafka_producer.py
 
 Simula la llegada de datos en tiempo real, publicando los registros del archivo Encuesta_movilidad.csv al tópico movilidad.
@@ -123,7 +124,7 @@ Ejecución:
 python3 kafka_producer.py
 
 ⚙️ Spark Streaming Consumer
-
+-
 Script: /home/vboxuser/spark_streaming_consumer.py
 
 Escucha el tópico movilidad y procesa los mensajes en tiempo real con Spark Structured Streaming.
@@ -145,6 +146,7 @@ spark-submit \
   /home/vboxuser/spark_streaming_consumer.py
 
 🧠 5. Arquitectura de la Solución
+-
                 ┌──────────────────────────────────┐
                 │ Encuesta_movilidad.csv (Kaggle)  │
                 └──────────────────┬───────────────┘
@@ -170,8 +172,9 @@ spark-submit \
                        Resultados en spark_output/
 
 📊 6. Resultados Esperados
+-
 🔹 Procesamiento Batch
-
+-
 Promedio de duración de viaje por medio de transporte.
 
 Conteo de viajes por motivo (MOTIVOVIAJE).
@@ -179,13 +182,13 @@ Conteo de viajes por motivo (MOTIVOVIAJE).
 Distribución horaria de viajes (HORA_INICIO, HORA_FIN).
 
 🔹 Procesamiento Streaming
-
+-
 Conteo en tiempo real de viajes según el medio de transporte.
 
 Resultados actualizados en consola o almacenados en /spark_output/.
 
 📸 7. Capturas sugeridas para la presentación
-
+-
 Estructura de carpetas en /home/vboxuser/.
 
 Ejecución del script batch_process.py con Spark.
@@ -197,13 +200,15 @@ Spark Streaming recibiendo y mostrando resultados en tiempo real.
 Archivos generados dentro de resultados/.
 
 🔗 8. Enlaces
+-
+Repositorio GitHub: [https://github.com/AndreaGR2018/proyecto_spark_movilidad]
 
-Repositorio GitHub: Proyecto de Análisis de Movilidad con Spark y Kafka
+Video explicativo: [  ]
 
-Video explicativo: (realizado por Andrea Gordillo Rojas, UNAD)
+Presentacion online: [  ]
 
 💬 9. Conclusiones
-
+-
 Este proyecto demuestra el potencial del ecosistema Big Data al integrar Spark (para procesamiento masivo y analítico) y Kafka (para transmisión y análisis en tiempo real).
 
 La aplicación permite analizar la movilidad de Bogotá de forma flexible y escalable, aplicando una infraestructura que combina:
