@@ -1,75 +1,48 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import from_json, col, window, avg, count, date_format
-from pyspark.sql.types import StructType, StructField, IntegerType, StringType, FloatType, TimestampType
+from pyspark.sql.functions import from_json, col
+from pyspark.sql.types import *
 
-# Crear sesión Spark
+# Crear sesión de Spark con soporte Kafka
 spark = SparkSession.builder \
-    .appName("KafkaSparkStreaming_Movilidad") \
-    .config("spark.sql.shuffle.partitions", "2") \
+    .appName("StreamingMovilidad") \
+    .master("local[*]") \
+    .config("spark.jars.packages",
+            "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3") \
     .getOrCreate()
 
 spark.sparkContext.setLogLevel("WARN")
 
-# Esquema de los datos JSON (coincide con el producer)
+# Definir esquema de los datos (ajustado a tu JSON)
 schema = StructType([
-    StructField("ID_ENCUESTA", IntegerType()),
-    StructField("NUMERO_PERSONA", IntegerType()),
-    StructField("NUMERO_VIAJE", IntegerType()),
-    StructField("MOTIVOVIAJE", StringType()),
-    StructField("MUNICIPIO_DESTINO", StringType()),
-    StructField("DEPARTAMENTO_DESTINO", StringType()),
-    StructField("TIEMPO_CAMINO", FloatType()),
-    StructField("HORA_INICIO", StringType()),
-    StructField("HORA_FIN", StringType()),
-    StructField("MEDIO_PREDOMINANTE", StringType()),
-    StructField("timestamp", TimestampType())
+    StructField("ID_ENCUESTA", LongType(), True),
+    StructField("NUMERO_PERSONA", IntegerType(), True),
+    StructField("NUMERO_VIAJE", IntegerType(), True),
+    StructField("MOTIVOVIAJE", StringType(), True),
+    StructField("DEPARTAMENTO_DESTINO", StringType(), True),
+    StructField("TIEMPO_CAMINO", FloatType(), True),
+    StructField("HORA_INICIO", StringType(), True),
+    StructField("HORA_FIN", StringType(), True),
+    StructField("MEDIO_PREDOMINANTE", StringType(), True)
 ])
 
-# Leer flujo de datos desde Kafka
-df = spark \
-    .readStream \
+# Leer el stream desde Kafka
+df_raw = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", "localhost:9092") \
     .option("subscribe", "movilidad") \
     .option("startingOffsets", "latest") \
     .load()
 
-# Extraer y parsear los datos JSON
-parsed_df = df.select(from_json(col("value").cast("string"), schema).alias("data")).select("data.*")
+# Convertir value a string y aplicar el esquema
+df = df_raw.select(from_json(col("value").cast("string"), schema).alias("data")).select("data.*")
+# Procesamiento simple: calcular promedio de tiempo por departamento
+resultado = df.groupBy("DEPARTAMENTO_DESTINO").avg("TIEMPO_CAMINO")
 
-# Reemplazar valores nulos
-parsed_df = parsed_df.na.fill({"TIEMPO_CAMINO": 0.0, "MEDIO_PREDOMINANTE": "Desconocido"})
-
-# Cálculo de estadísticas por ventana de 1 minuto
-stats = parsed_df \
-    .groupBy(
-        window(col("timestamp"), "1 minute"),
-        col("MEDIO_PREDOMINANTE")
-    ) \
-    .agg(
-        avg("TIEMPO_CAMINO").alias("PROMEDIO_TIEMPO"),
-        count("*").alias("TOTAL_VIAJES")
-    ) \
-    .withColumn("INICIO_VENTANA", date_format(col("window.start"), "HH:mm:ss")) \
-    .withColumn("FIN_VENTANA", date_format(col("window.end"), "HH:mm:ss")) \
-    .select("INICIO_VENTANA", "FIN_VENTANA", "MEDIO_PREDOMINANTE", "PROMEDIO_TIEMPO", "TOTAL_VIAJES")
-
-# Mostrar resultados en consola (Complete mode OK)
-console_query = stats \
-    .writeStream \
+# Mostrar resultados en consola (en lugar de CSV)
+query = resultado.writeStream \
     .outputMode("complete") \
     .format("console") \
-    .option("truncate", "false") \
+    .option("truncate", False) \
     .start()
 
-# Guardar resultados en CSV (Append mode)
-file_query = stats \
-    .writeStream \
-    .outputMode("append") \
-    .format("csv") \
-    .option("path", "file:///home/vboxuser/spark_output/movilidad") \
-    .option("checkpointLocation", "file:///home/vboxuser/spark_output/checkpoints") \
-    .start()
-
-# Esperar a que termine el streaming
-spark.streams.awaitAnyTermination()
+query.awaitTermination()
