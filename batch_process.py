@@ -1,69 +1,57 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, count, avg, round, desc
+from pyspark.sql.functions import col, avg, count, when
 
-# 1️⃣ Crear la sesión de Spark
+# Crear sesión Spark
 spark = SparkSession.builder \
-    .appName("ProcesamientoBatch_EncuestaMovilidad") \
+    .appName("Batch_Encuesta_Movilidad") \
     .getOrCreate()
 
-print("\n🚀 Iniciando procesamiento batch...")
+# ===============================
+# 1️⃣ Cargar datos desde el CSV
+# ===============================
+data_path = "/home/vboxuser/datasets/Encuesta_movilidad.csv"
 
-# 2️⃣ Cargar el archivo CSV
-df = spark.read.csv("/home/vboxuser/datasets/Encuesta_movilidad.csv", header=True, inferSchema=True)
+df = spark.read.csv(data_path, header=True, inferSchema=True)
 
-# 3️⃣ Mostrar estructura inicial
-print("\n📋 Columnas del DataFrame:")
-print(df.columns)
-print(f"\n📊 Total de registros iniciales: {df.count()}")
+print("✅ Datos cargados desde CSV:")
+df.show(5)
 
-# 4️⃣ Mostrar muestra aleatoria
-print("\n🔍 Muestra aleatoria de registros:")
-df.sample(fraction=0.01, seed=42).show(5, truncate=False)
+# ===============================
+# 2️⃣ Limpieza y transformación
+# ===============================
+# Eliminar filas con valores nulos en campos importantes
+df_clean = df.dropna(subset=["MOTIVOVIAJE", "MEDIO_PREDOMINANTE", "TIEMPO_CAMINO"])
 
-# 5️⃣ Resumen estadístico del tiempo de camino
-print("\n📈 Resumen estadístico de 'TIEMPO_CAMINO':")
-df.select("TIEMPO_CAMINO").describe().show()  
-# 6️⃣ Limpieza de datos
-df_limpio = df.filter(
-    (col("MEDIO_PREDOMINANTE").isNotNull()) &
-    (col("TIEMPO_CAMINO").isNotNull()) &
-    (col("TIEMPO_CAMINO") > 0)
+# ===============================
+# 3️⃣ Análisis exploratorio (EDA)
+# ===============================
+
+# 3.1. Promedio de tiempo de camino por medio de transporte
+promedio_tiempo = df_clean.groupBy("MEDIO_PREDOMINANTE").agg(
+    avg("TIEMPO_CAMINO").alias("PROMEDIO_TIEMPO")
 )
 
-print(f"\n🧹 Total de registros después de limpieza: {df_limpio.count()}")
+# 3.2. Distribución de motivos de viaje
+distribucion = df_clean.groupBy("MOTIVOVIAJE").agg(
+    count("*").alias("CANTIDAD_VIAJES")
+)
+# 3.3. Conteo de viajes por departamento de destino
+conteo_viajes = df_clean.groupBy("DEPARTAMENTO_DESTINO").agg(
+    count("*").alias("TOTAL_VIAJES")
+)
 
-# 7️⃣ Transformaciones y análisis
-# Conteo de viajes por medio de transporte
-conteo = df_limpio.groupBy("MEDIO_PREDOMINANTE") \
-    .agg(count("*").alias("NUM_VIAJES")) \
-    .orderBy(desc("NUM_VIAJES"))
+# ===============================
+# 4️⃣ Guardar resultados
+# ===============================
+output_base = "/home/vboxuser/datasets/encuesta_movilidad/resultados"
 
-# Promedio de tiempo de viaje
-promedios = df_limpio.groupBy("MEDIO_PREDOMINANTE") \
-    .agg(round(avg("TIEMPO_CAMINO"), 2).alias("PROMEDIO_TIEMPO")) \
-    .orderBy(col("PROMEDIO_TIEMPO").asc())
+promedio_tiempo.write.mode("overwrite").csv(f"{output_base}/promedio_tiempo", header=True)
+distribucion.write.mode("overwrite").csv(f"{output_base}/distribucion", header=True)
+conteo_viajes.write.mode("overwrite").csv(f"{output_base}/conteo_viajes", header=True)
 
-# 8️⃣ Distribución porcentual de medios de transporte
-total_viajes = df_limpio.count()
-distribucion = conteo.withColumn("PORCENTAJE", round((col("NUM_VIAJES") / total_viajes) * 100, 2))
+print("✅ Resultados almacenados en:")
+print(f"  - {output_base}/promedio_tiempo")
+print(f"  - {output_base}/distribucion")
+print(f"  - {output_base}/conteo_viajes")
 
-# 9️⃣ Mostrar resultados en consola
-print("\n🚗 --- Conteo de viajes por medio de transporte ---")
-conteo.show(truncate=False)
-
-print("\n🕒 --- Tiempo promedio de viaje por medio de transporte ---")
-promedios.show(truncate=False)
- print("\n📊 --- Distribución porcentual de medios de transporte ---")
-distribucion.show(truncate=False)
-
-# 🔟 Guardar resultados
-output_dir = "/home/vboxuser/datasets/encuesta_movilidad/resultados"
-conteo.write.mode("overwrite").csv(f"{output_dir}/conteo_viajes", header=True)
-promedios.write.mode("overwrite").csv(f"{output_dir}/promedio_tiempo", header=True)
-distribucion.write.mode("overwrite").csv(f"{output_dir}/distribucion", header=True)
-
-print("\n✅ Procesamiento batch completado correctamente.")
-print(f"📂 Resultados guardados en: {output_dir}")
-
-# 🔚 Cerrar sesión
 spark.stop()
