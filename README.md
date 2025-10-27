@@ -3,7 +3,7 @@
 Autora: Andrea Gordillo Rojas
 Universidad: UNAD – Universidad Nacional Abierta y a Distancia
 Asignatura: Big Data y Analítica Avanzada
-Entorno de ejecución: Ubuntu (VM en VirtualBox con Apache Spark, Kafka y Zookeeper instalados)
+Entorno de ejecución: Ubuntu (VM en VirtualBox con Apache Spark, Kafka, Python y Zookeeper instalados)
 
 🧩 1. Definición del problema y conjunto de datos
 
