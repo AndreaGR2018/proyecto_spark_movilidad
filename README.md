@@ -1,115 +1,98 @@
-# 🚦 Proyecto de Análisis de Movilidad con Spark y Kafka
+🚦 Proyecto de Análisis de Movilidad con Spark y Kafka
 
-## 📘 Introducción
-Este proyecto tiene como objetivo analizar datos de movilidad de los ciudadanos de Bogotá mediante el uso de **Apache Spark** para el procesamiento masivo de datos y **Apache Kafka** para el procesamiento en tiempo real.  
-El flujo completo incluye procesamiento **batch** (análisis exploratorio y limpieza de datos históricos) y **streaming** (análisis en tiempo real de los datos enviados a un topic de Kafka).
+Autora: Andrea Gordillo Rojas
+Universidad: UNAD – Universidad Nacional Abierta y a Distancia
+Asignatura: Big Data y Analítica Avanzada
+Entorno de ejecución: Ubuntu (VM en VirtualBox con Apache Spark, Kafka y Zookeeper instalados)
 
----
+🧩 1. Definición del problema y conjunto de datos
 
-## 🎯 Definición del Problema
-El propósito es analizar los patrones de movilidad en la ciudad, específicamente:
-- Identificar los **medios de transporte más utilizados**.  
-- Calcular el **tiempo promedio de viaje** según el medio de transporte.  
-- Observar cómo varían estos datos en tiempo real al simular la llegada de nuevos registros.
+El proyecto tiene como propósito analizar la movilidad urbana en Bogotá, utilizando la Encuesta de Movilidad 2019, con el fin de identificar patrones de viaje, medios de transporte predominantes y tiempos promedio de desplazamiento.
 
-El análisis permite comprender mejor los hábitos de transporte y puede apoyar la toma de decisiones en materia de movilidad urbana.
+Se emplean herramientas del ecosistema Big Data —Apache Spark y Apache Kafka— para realizar un procesamiento batch y un procesamiento en tiempo real (streaming), demostrando cómo ambos enfoques se complementan en un escenario analítico completo.
 
----
+🧾 Conjunto de datos
 
-## 📊 Conjunto de Datos
-- **Nombre:** `Encuesta_movilidad.csv`  
-- **Fuente:** [Kaggle – Encuesta de Movilidad en Bogotá](https://www.kaggle.com)  
-- **Ubicación local:** `/home/vboxuser/datasets/Encuesta_movilidad.csv`  
-- **Descripción:** Contiene información sobre los viajes diarios realizados por los ciudadanos: motivos del viaje, municipio y departamento de destino, medio de transporte, tiempos de desplazamiento y horarios.
+Nombre: Movilidad de Bogotá – Caracterización de Viajes
 
----
+Archivo: Encuesta_movilidad.csv
 
-## ⚙️ Tecnologías Utilizadas
-- **Apache Spark 3.5.x**
-- **Apache Kafka 3.6.x**
-- **Hadoop (instalado en la VM de Big Data)**
-- **Python 3**
-- **Librería:** `kafka-python`
+Fuente: Kaggle (Encuesta de Movilidad Bogotá 2019)[(https://www.kaggle.com/datasets/eduarmma19/movilidad-de-bogot-caracterizacin-viajes?resource=download)]
 
----
+Tamaño: ~43 MB
 
-## 🧠 Arquitectura del Proyecto
+Formato: CSV
 
-Kafka Producer ---> Kafka Topic "movilidad" ---> Spark Streaming Consumer
+Ubicación en la VM:
+
+/home/vboxuser/datasets/Encuesta_movilidad.csv
+
+🗂 2. Estructura de carpetas del proyecto
+
+La organización del proyecto dentro de la VM es la siguiente:
+
+/home/vboxuser/
 │
-▼
-Procesamiento en tiempo real
+├── spark_output/                      → Resultados del procesamiento en streaming
 │
-▼
-Resultados en consola y CSV
-
-
----
-
-## 🧩 Estructura del Repositorio
-
-proyecto_spark_movilidad/
+├── datasets/
+│   ├── Encuesta_movilidad.csv         → Conjunto de datos original
+│   ├── batch_process.py               → Script de procesamiento batch (Spark)
+│   └── encuesta_movilidad/
+│       └── resultados/
+│           ├── promedio_tiempo/       → Resultados del procesamiento batch
+│           ├── distribucion/          → Resultados del procesamiento batch
+│           └── conteo_viajes/         → Resultados del procesamiento batch
 │
-├── batch_process.py # Procesamiento batch (EDA y análisis)
-├── kafka_producer.py # Productor de datos para Kafka
-├── spark_streaming_consumer.py # Consumidor Spark Streaming
-└── README.md
+├── kafka_producer.py                  → Productor de Kafka (simula flujo de datos)
+└── spark_streaming_consumer.py        → Consumidor Spark Streaming (procesamiento en tiempo real)
 
----
 
-## 🧹 Procesamiento Batch (Análisis Exploratorio y Limpieza)
+batch_process.py: Procesamiento batch con Spark (limpieza, análisis y almacenamiento).
 
-El script [`batch_process.py`](batch_process.py) realiza operaciones de limpieza, transformación y **análisis exploratorio de datos (EDA)** usando **DataFrames de Spark**.
+kafka_producer.py: Envía los datos del CSV a un tópico Kafka.
 
-### 🔍 Funcionalidades
-- Carga del dataset con inferencia de esquema.
-- Muestra aleatoria de registros para ver el contenido.
-- Estadísticas descriptivas (`describe()`).
-- Filtrado de valores nulos o inválidos.
-- Cálculo de:
-  - Conteo de viajes por medio de transporte.
-  - Tiempo promedio de viaje.
-  - Distribución porcentual de los medios utilizados.
-- Exporta los resultados a:
+spark_streaming_consumer.py: Procesa los datos en tiempo real con Spark Streaming.
+
+resultados/: Contiene los CSV generados por el análisis batch.
+
+⚙️ 3. Procesamiento Batch (Spark)
+
+Script: datasets/batch_process.py
+
+Este script realiza el análisis y transformación inicial del dataset de movilidad:
+
+Funcionalidades principales:
+
+Lectura del archivo CSV con Spark.
+
+Limpieza de datos: eliminación de nulos y registros inconsistentes.
+
+Transformación de columnas y conversión de tipos.
+
+Cálculo de indicadores principales:
+
+Promedio de tiempo de viaje por medio de transporte.
+
+Conteo de viajes por motivo.
+
+Distribución horaria de los desplazamientos.
+
+Almacenamiento de resultados en:
+
 /home/vboxuser/datasets/encuesta_movilidad/resultados/
-
-
-### ▶️ Ejecución
-```bash
-spark-submit batch_process.py
-⚡ Procesamiento en Tiempo Real (Kafka + Spark Streaming)
-
-1️⃣ Iniciar los servicios
-En la máquina virtual con Ubuntu (usuario: vboxuser, contraseña: bigdata):
-
-Iniciar ZooKeeper
-sudo /opt/Kafka/bin/zookeeper-server-start.sh /opt/Kafka/config/zookeeper.properties &
-Iniciar Kafka
-sudo /opt/Kafka/bin/kafka-server-start.sh /opt/Kafka/config/server.properties &
-Crear el topic
-/opt/Kafka/bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 1 --topic movilidad
-
-2️⃣ Ejecutar el Productor
-El script kafka_producer.py envía los registros del archivo CSV al topic movilidad en formato JSON, simulando la llegada continua de datos.
-
-python3 kafka_producer.py
-Cada mensaje enviado se muestra en consola, con un pequeño retardo (time.sleep(0.5)) para simular un flujo en tiempo real.
-
-3️⃣ Ejecutar el Consumidor (Spark Streaming)
-El script spark_streaming_consumer.py lee los datos del topic movilidad, los procesa y calcula estadísticas agregadas cada minuto, mostrando resultados en consola y guardándolos como CSV.
+├── promedio_tiempo/
+├── distribucion/
+└── conteo_viajes/
 
 Ejecución:
-spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3 spark_streaming_consumer.py
+cd /home/vboxuser/datasets
+python3 batch_process.py
 
-Resultados:
-Se muestran en la consola de Spark Streaming.
-
-También se guardan automáticamente en:
-
-/home/vboxuser/spark_output/movilidad/
-📈 Ejemplo de Resultados
-Batch (promedios y conteos):
-
+Ejemplo de salida:
+-------------------------------------------
+Batch: 5
+-------------------------------------------
 +------------------+-------------+
 |MEDIO_PREDOMINANTE|PROMEDIO_TIEMPO|
 +------------------+-------------+
@@ -120,43 +103,113 @@ Batch (promedios y conteos):
 +------------------+-------------+
 Streaming (salida en tiempo real):
 
--------------------------------------------
-Batch: 5
--------------------------------------------
-|INICIO_VENTANA|FIN_VENTANA|MEDIO_PREDOMINANTE|PROMEDIO_TIEMPO|TOTAL_VIAJES|
-|00:01:00       |00:02:00  |Transmilenio      |26.7           |45          |
-|00:01:00       |00:02:00  |Bicicleta         |14.3           |12          |
--------------------------------------------
-🌐 Interfaz Web de Spark
-Durante la ejecución de Spark Streaming, puedes acceder al panel de monitoreo en tu navegador:
+🔄 4. Procesamiento en Tiempo Real (Streaming + Kafka)
+⚙️ Kafka Producer
 
-perl
-Copiar código
-http://<IP-local>:4040
-Ejemplo:
+Script: /home/vboxuser/kafka_producer.py
 
-http://192.168.1.7:4040
-📦 Evidencias y Resultados
-En la carpeta del repositorio encontrarás capturas de pantalla que evidencian:
+Simula la llegada de datos en tiempo real, publicando los registros del archivo Encuesta_movilidad.csv al tópico movilidad.
 
-Ejecución del productor Kafka.
+Pasos:
 
-Procesamiento en tiempo real con Spark Streaming.
+Leer el CSV.
 
-Resultados batch y streaming almacenados correctamente.
+Convertir cada fila en un mensaje JSON.
 
-✅ Conclusiones
-Se logró integrar Apache Kafka con Apache Spark Streaming para el procesamiento en tiempo real.
+Enviar los mensajes al tópico Kafka.
 
-Se realizaron operaciones de limpieza, transformación y EDA sobre el dataset en modo batch.
+Ejecución:
 
-El sistema permite analizar la movilidad urbana tanto históricamente como en tiempo real.
+python3 kafka_producer.py
 
-Los resultados se visualizan en consola y se guardan en formato CSV.
+⚙️ Spark Streaming Consumer
 
-👩‍💻 Autor
-Andrea Gordillo
-Proyecto: Análisis de Movilidad con Spark y Kafka
-Universidad Nacional Abierta y a Distancia UNAD
-Asignatura: Big Data
-Año: 2025
+Script: /home/vboxuser/spark_streaming_consumer.py
+
+Escucha el tópico movilidad y procesa los mensajes en tiempo real con Spark Structured Streaming.
+
+Tareas:
+
+Conectarse al tópico Kafka movilidad.
+
+Leer los mensajes JSON y estructurarlos como DataFrame.
+
+Calcular conteos en tiempo real por medio de transporte.
+
+Mostrar los resultados en consola y almacenarlos opcionalmente en /spark_output/.
+
+Ejecución:
+
+spark-submit \
+  --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0 \
+  /home/vboxuser/spark_streaming_consumer.py
+
+🧠 5. Arquitectura de la Solución
+                ┌──────────────────────────────────┐
+                │ Encuesta_movilidad.csv (Kaggle)  │
+                └──────────────────┬───────────────┘
+                                   │
+             ┌─────────────────────▼─────────────────────┐
+             │ batch_process.py (Spark - Batch)          │
+             │ Limpieza + EDA + Resultados CSV           │
+             └──────────────┬────────────────────────────┘
+                            │
+                Resultados en: resultados/
+                            │
+                            ▼
+             ┌──────────────────────────────────┐
+             │ kafka_producer.py                 │
+             │ Envía datos JSON a Kafka (topic)  │
+             └──────────────────┬───────────────┘
+                                │
+             ┌──────────────────▼───────────────┐
+             │ spark_streaming_consumer.py       │
+             │ Procesamiento en tiempo real      │
+             └──────────────────┬───────────────┘
+                                │
+                       Resultados en spark_output/
+
+📊 6. Resultados Esperados
+🔹 Procesamiento Batch
+
+Promedio de duración de viaje por medio de transporte.
+
+Conteo de viajes por motivo (MOTIVOVIAJE).
+
+Distribución horaria de viajes (HORA_INICIO, HORA_FIN).
+
+🔹 Procesamiento Streaming
+
+Conteo en tiempo real de viajes según el medio de transporte.
+
+Resultados actualizados en consola o almacenados en /spark_output/.
+
+📸 7. Capturas sugeridas para la presentación
+
+Estructura de carpetas en /home/vboxuser/.
+
+Ejecución del script batch_process.py con Spark.
+
+Productor Kafka enviando datos al tópico movilidad.
+
+Spark Streaming recibiendo y mostrando resultados en tiempo real.
+
+Archivos generados dentro de resultados/.
+
+🔗 8. Enlaces
+
+Repositorio GitHub: Proyecto de Análisis de Movilidad con Spark y Kafka
+
+Video explicativo: (realizado por Andrea Gordillo Rojas, UNAD)
+
+💬 9. Conclusiones
+
+Este proyecto demuestra el potencial del ecosistema Big Data al integrar Spark (para procesamiento masivo y analítico) y Kafka (para transmisión y análisis en tiempo real).
+
+La aplicación permite analizar la movilidad de Bogotá de forma flexible y escalable, aplicando una infraestructura que combina:
+
+Limpieza y análisis batch de grandes volúmenes.
+
+Procesamiento de flujos en tiempo real.
+
+Persistencia de resultados para análisis posteriores.  
