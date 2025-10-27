@@ -1,44 +1,27 @@
-import pandas as pd
+from kafka import KafkaProducer
 import json
 import time
-from kafka import KafkaProducer
-from datetime import datetime
+import pandas as pd
 
-# Cargar datos desde el CSV local
-df = pd.read_csv("/home/vboxuser/datasets/Encuesta_movilidad.csv")
-
-# Crear el productor Kafka
+# Configurar Kafka producer
 producer = KafkaProducer(
     bootstrap_servers=['localhost:9092'],
     value_serializer=lambda x: json.dumps(x).encode('utf-8')
 )
 
-print("📤 Iniciando envío de datos al topic 'movilidad'...\n")
+# Leer archivo CSV
+file_path = "/home/vboxuser/datasets/Encuesta_movilidad.csv"
+df = pd.read_csv(file_path)
 
-# Enviar cada fila del DataFrame como mensaje JSON
+print(f"🚀 Enviando {len(df)} registros a Kafka...")
+
 for i, row in df.iterrows():
-    try:
-        data = {
-            "ID_ENCUESTA": int(row["ID_ENCUESTA"]),
-            "NUMERO_PERSONA": int(row["NUMERO_PERSONA"]),
-            "NUMERO_VIAJE": int(row["NUMERO_VIAJE"]),
-            "MOTIVOVIAJE": str(row["MOTIVOVIAJE"]),
-            "MUNICIPIO_DESTINO": str(row["MUNICIPIO_DESTINO"]),
-            "DEPARTAMENTO_DESTINO": str(row["DEPARTAMENTO_DESTINO"]),
-            "TIEMPO_CAMINO": float(row["TIEMPO_CAMINO"]) if not pd.isna(row["TIEMPO_CAMINO"]) else 0.0,
-            "HORA_INICIO": str(row["HORA_INICIO"]),
-            "HORA_FIN": str(row["HORA_FIN"]),
-            "MEDIO_PREDOMINANTE": str(row.get("MEDIO_PREDOMINANTE", "Desconocido")),
-            "timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
-        }
+    message = row.to_dict()
+    producer.send("movilidad", value=message)
+    print(f"📤 Enviado ({i+1}/{len(df)}): {message}")
+    time.sleep(0.5)  # simular llegada de datos en tiempo real
 
-        producer.send('movilidad', value=data)
-        print(f"✅ Enviado ({i+1}/{len(df)}): {data}")
-        time.sleep(0.5)  # Simula flujo en tiempo real
-    except Exception as e:
-        print(f"⚠️ Error en la fila {i}: {e}")
-
-# Finalizar el envío
 producer.flush()
 producer.close()
-print("\n✅ Envío de datos completado correctamente.")
+
+print("✅ Envío completo.")
